@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14C1514" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="ufC-wZ-h7g">
+            <objects>
+                <viewController id="vXZ-lx-hvc" customClass="ViewController" customModule="ImageCaptureSession" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="jyV-Pf-zRb"/>
+                        <viewControllerLayoutGuide type="bottom" id="2fi-mo-0CV"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Abf-sk-JaG" customClass="PreviewView" customModule="ImageCaptureSession" customModuleProvider="target">
+                                <rect key="frame" x="150" y="28" width="300" height="350"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="300" id="eKd-Uo-887"/>
+                                    <constraint firstAttribute="height" constant="350" id="o7l-fu-Tg4"/>
+                                </constraints>
+                            </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gkf-NS-P7u">
+                                <rect key="frame" x="196" y="386" width="77" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="77" id="260-33-8jh"/>
+                                    <constraint firstAttribute="height" constant="30" id="b8F-13-OGt"/>
+                                </constraints>
+                                <state key="normal" title="Take Photo">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="takePhotoPressed:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="ujd-z8-Rre"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XIE-w3-iIC">
+                                <rect key="frame" x="327" y="386" width="105" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="105" id="LiK-eR-H2q"/>
+                                    <constraint firstAttribute="height" constant="30" id="io7-7b-BgC"/>
+                                </constraints>
+                                <state key="normal" title="Switch Camera">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="switchCamerasPressed:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="vYh-or-9nY"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="Abf-sk-JaG" firstAttribute="top" secondItem="jyV-Pf-zRb" secondAttribute="bottom" constant="8" id="4O3-R6-jBq"/>
+                            <constraint firstItem="gkf-NS-P7u" firstAttribute="top" secondItem="Abf-sk-JaG" secondAttribute="bottom" constant="8" id="8h8-nR-81p"/>
+                            <constraint firstItem="XIE-w3-iIC" firstAttribute="top" secondItem="Abf-sk-JaG" secondAttribute="bottom" constant="8" id="Jcd-W1-c7g"/>
+                            <constraint firstAttribute="centerX" secondItem="Abf-sk-JaG" secondAttribute="centerX" id="LbS-y3-MYW"/>
+                            <constraint firstAttribute="centerX" secondItem="gkf-NS-P7u" secondAttribute="centerX" constant="65.5" id="Sbx-i2-m1P"/>
+                            <constraint firstAttribute="centerX" secondItem="XIE-w3-iIC" secondAttribute="centerX" constant="-79.5" id="Srj-CO-Ofu"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="previewView" destination="Abf-sk-JaG" id="ya4-ei-Tzi"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
+            </objects>
+        </scene>
+        <!--Image View Controller-->
+        <scene sceneID="GfW-Ah-yvT">
+            <objects>
+                <viewController storyboardIdentifier="ImageViewController" id="eP4-30-f4v" customClass="ImageViewController" customModule="ImageCaptureSession" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="rDt-zP-VMu"/>
+                        <viewControllerLayoutGuide type="bottom" id="u4Z-Bf-5LD"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="3tR-I0-bXw">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="pMd-LL-1nF">
+                                <rect key="frame" x="150" y="28" width="300" height="350"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="350" id="J1C-RM-dA8"/>
+                                    <constraint firstAttribute="width" constant="300" id="vHm-Z8-thR"/>
+                                </constraints>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sPY-6V-hkw">
+                                <rect key="frame" x="273" y="386" width="54" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="54" id="fmE-d6-s9n"/>
+                                    <constraint firstAttribute="height" constant="30" id="zcd-zT-ot0"/>
+                                </constraints>
+                                <state key="normal" title="Dismiss">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="dismissViewPressed" destination="eP4-30-f4v" eventType="touchUpInside" id="Dae-fp-Q10"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="centerX" secondItem="sPY-6V-hkw" secondAttribute="centerX" id="ACF-fP-4N9"/>
+                            <constraint firstAttribute="centerX" secondItem="pMd-LL-1nF" secondAttribute="centerX" id="INJ-2c-jgn"/>
+                            <constraint firstItem="sPY-6V-hkw" firstAttribute="top" secondItem="pMd-LL-1nF" secondAttribute="bottom" constant="8" id="Qgk-gV-YBE"/>
+                            <constraint firstItem="pMd-LL-1nF" firstAttribute="top" secondItem="rDt-zP-VMu" secondAttribute="bottom" constant="8" id="fYR-vu-uwv"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="imageView" destination="pMd-LL-1nF" id="t15-ii-hAh"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="XO5-vs-8xY" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="946" y="315"/>
+        </scene>
+    </scenes>
+</document>
