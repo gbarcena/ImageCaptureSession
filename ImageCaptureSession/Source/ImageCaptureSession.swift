@@ -139,14 +139,13 @@ public class ImageCaptureSession: NSObject {
         stillImageOutput.captureStillImageAsynchronouslyFromConnection(videoConnection, completionHandler: { (sampleBuffer, error) -> Void in
             if (error == nil)
             {
+                let outputRect = self.previewLayer.metadataOutputRectOfInterestForRect(self.previewLayer.bounds)
                 var imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
                 var image = UIImage(data: imageData)
-                if (isFrontCamera)
-                {
-                    let scale = image?.scale
-                    image = UIImage(CGImage: image?.CGImage, scale: scale!, orientation: .LeftMirrored)
+                if let cleanUpImage = image {
+                    image = self.dynamicType.cleanUpImage(cleanUpImage, mirrorFlipImage: isFrontCamera, cropRect: outputRect)
                 }
-                
+
                 completion(image: image, error: nil)
             }
             else
@@ -157,10 +156,49 @@ public class ImageCaptureSession: NSObject {
         })
     }
     
+    private class func cleanUpImage(var image:UIImage, mirrorFlipImage:Bool, cropRect:CGRect) -> UIImage {
+        // When using the front fracing camera, instead of seeing the
+        // original image in the final image we see it flipped so this
+        // flips it back
+        if (mirrorFlipImage) {
+            let scale = image.scale
+            if let flippedImage = UIImage(CGImage: image.CGImage, scale: scale, orientation: .LeftMirrored) {
+                image = flippedImage
+            }
+        }
+        
+        // When the image is taken it is the full bounds of the camera.
+        // So this code crops out what is seen in the preview layer rect
+        //http://stackoverflow.com/questions/15951746/how-to-crop-an-image-from-avcapture-to-a-rect-seen-on-the-display
+        let outputRect = cropRect
+        let cgImage = image.CGImage
+        let width : CGFloat = CGFloat(CGImageGetWidth(cgImage))
+        let height : CGFloat = CGFloat(CGImageGetHeight(cgImage))
+        let cropRect = CGRect(x: outputRect.origin.x * width,
+            y: outputRect.origin.y * height,
+            width: outputRect.size.width * width,
+            height: outputRect.size.height * height)
+        
+        let croppedCGImage = CGImageCreateWithImageInRect(cgImage, cropRect)
+        if let croppedImage = UIImage(CGImage: croppedCGImage, scale: 1, orientation: image.imageOrientation) {
+            image = croppedImage
+        }
+        
+        // Remove all orientation information
+        UIGraphicsBeginImageContext(image.size)
+        image.drawAtPoint(CGPointZero)
+        if let graphicsImage = UIGraphicsGetImageFromCurrentImageContext() {
+            image = graphicsImage
+        }
+        UIGraphicsEndImageContext();
+        
+        return image
+    }
+    
     public class func checkAndRequestCameraPermissions(completion:(granted:Bool) -> Void)
     {
         /* Auth status request can be slow so this code is added so we can check
-           a local variable instead of asking the device. It is implemented as a 
+           a local variable instead of asking the device. It is implemented as a
            struct because at the time of writing there were no static variables
            in functions. It is okay to do it like this because changing the 
            permission will terminate the app.

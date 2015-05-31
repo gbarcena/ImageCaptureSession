@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "ImageCaptureSession"
-  s.version          = "1.0.0"
+  s.version          = "1.0.1"
   s.summary          = "An easy way to resize a gif."
   s.homepage         = "https://github.com/gbarcena/ImageCaptureSession"
   s.license          = 'MIT'
