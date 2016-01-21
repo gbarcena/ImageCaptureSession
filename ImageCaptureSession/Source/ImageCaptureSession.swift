@@ -12,7 +12,9 @@ public class PreviewView : UIView {
     var previewLayer : AVCaptureVideoPreviewLayer? {
         didSet {
             oldValue?.removeFromSuperlayer()
-            self.layer.insertSublayer(previewLayer, atIndex: 0)
+            if let previewLayer = previewLayer {
+                self.layer.insertSublayer(previewLayer, atIndex: 0)
+            }
         }
     }
     
@@ -24,23 +26,22 @@ public class PreviewView : UIView {
 
 public class ImageCaptureSession: NSObject {
     var session = AVCaptureSession()
-    var previewLayer : AVCaptureVideoPreviewLayer
-    var stillImageOutput : AVCaptureStillImageOutput
-
+    var previewLayer: AVCaptureVideoPreviewLayer
+    var stillImageOutput: AVCaptureStillImageOutput
+    
     public init(position:AVCaptureDevicePosition, previewView:PreviewView)
     {
         session.beginConfiguration()
         session.sessionPreset = AVCaptureSessionPresetPhoto
-        var device = self.dynamicType.createCameraInput(position:position)
-        var input: AnyObject! = AVCaptureDeviceInput.deviceInputWithDevice(device, error: nil)
-        if  (input == nil)
-        {
-            print("No Input");
+        let device = ImageCaptureSession.createCameraInput(position:position)
+        let input = try? AVCaptureDeviceInput(device: device)
+        if input == nil {
+            print("No input")
         }
-        self.session.addInput(input as! AVCaptureInput);
-        var output = AVCaptureVideoDataOutput()
+        self.session.addInput(input);
+        let output = AVCaptureVideoDataOutput()
         self.session.addOutput(output)
-        output.videoSettings = [kCVPixelBufferPixelFormatTypeKey:kCVPixelFormatType_32BGRA]
+        output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as NSString : Int(kCVPixelFormatType_32BGRA)]
         previewLayer = AVCaptureVideoPreviewLayer(session: self.session)
         previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
         previewLayer.frame = previewView.bounds
@@ -52,7 +53,7 @@ public class ImageCaptureSession: NSObject {
         
         session.commitConfiguration()
         
-        var connection = stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
+        let connection = stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
         connection.videoOrientation = .Portrait
     }
     
@@ -68,30 +69,30 @@ public class ImageCaptureSession: NSObject {
     
     public func switchCameras()
     {
-        var currentCameraInput = session.inputs[0] as! AVCaptureDeviceInput;
+        let currentCameraInput = session.inputs[0] as! AVCaptureDeviceInput
         var newCamera : AVCaptureDevice?
         if (currentCameraInput.device.position == .Back)
         {
-            newCamera = self.dynamicType.createCameraInput(position: .Front)
+            newCamera = ImageCaptureSession.createCameraInput(position: .Front)
         }
         else
         {
-            newCamera = self.dynamicType.createCameraInput(position: .Back)
+            newCamera = ImageCaptureSession.createCameraInput(position: .Back)
         }
         
         if let newCamera = newCamera
         {
             session.beginConfiguration()
-            let newVideoInput = AVCaptureDeviceInput(device: newCamera, error: nil)
+            let newVideoInput = try? AVCaptureDeviceInput(device: newCamera)
             session.removeInput(currentCameraInput)
             session.addInput(newVideoInput);
             session.commitConfiguration()
         }
     }
     
-    private class func createCameraInput(#position : AVCaptureDevicePosition) -> AVCaptureDevice?
+    class private func createCameraInput(position position : AVCaptureDevicePosition) -> AVCaptureDevice?
     {
-        var devices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
+        let devices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
         for device in devices
         {
             if (device.position == position)
@@ -125,7 +126,7 @@ public class ImageCaptureSession: NSObject {
                 if (port.mediaType == AVMediaTypeVideo)
                 {
                     videoConnection = connection
-                    var deviceInput = port.input as! AVCaptureDeviceInput
+                    let deviceInput = port.input as! AVCaptureDeviceInput
                     isFrontCamera = (deviceInput.device.position == .Front)
                     break
                 }
@@ -140,7 +141,7 @@ public class ImageCaptureSession: NSObject {
             if (error == nil)
             {
                 let outputRect = self.previewLayer.metadataOutputRectOfInterestForRect(self.previewLayer.bounds)
-                var imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
+                let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
                 var image = UIImage(data: imageData)
                 if let cleanUpImage = image {
                     image = self.dynamicType.cleanUpImage(cleanUpImage, mirrorFlipImage: isFrontCamera, cropRect: outputRect)
@@ -162,9 +163,7 @@ public class ImageCaptureSession: NSObject {
         // flips it back
         if (mirrorFlipImage) {
             let scale = image.scale
-            if let flippedImage = UIImage(CGImage: image.CGImage, scale: scale, orientation: .LeftMirrored) {
-                image = flippedImage
-            }
+            image = UIImage(CGImage: image.CGImage!, scale: scale, orientation: .LeftMirrored)
         }
         
         // When the image is taken it is the full bounds of the camera.
@@ -180,9 +179,7 @@ public class ImageCaptureSession: NSObject {
             height: outputRect.size.height * height)
         
         let croppedCGImage = CGImageCreateWithImageInRect(cgImage, cropRect)
-        if let croppedImage = UIImage(CGImage: croppedCGImage, scale: 1, orientation: image.imageOrientation) {
-            image = croppedImage
-        }
+        image = UIImage(CGImage: croppedCGImage!, scale: 1, orientation: image.imageOrientation)
         
         // Remove all orientation information
         UIGraphicsBeginImageContext(image.size)
@@ -207,8 +204,7 @@ public class ImageCaptureSession: NSObject {
             static var authStatus = AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo)
         }
         
-        switch (Holder.authStatus)
-            {
+        switch (Holder.authStatus) {
         case .Authorized, .Restricted:
             dispatch_async(dispatch_get_main_queue()) { completion(granted: true) }
         case .Denied:
