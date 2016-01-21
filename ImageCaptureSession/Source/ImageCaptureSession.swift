@@ -29,8 +29,7 @@ public class ImageCaptureSession: NSObject {
     var previewLayer: AVCaptureVideoPreviewLayer
     var stillImageOutput: AVCaptureStillImageOutput
     
-    public init(position:AVCaptureDevicePosition, previewView:PreviewView)
-    {
+    public init(position:AVCaptureDevicePosition, previewView:PreviewView) {
         session.beginConfiguration()
         session.sessionPreset = AVCaptureSessionPresetPhoto
         let device = ImageCaptureSession.createCameraInput(position:position)
@@ -57,31 +56,25 @@ public class ImageCaptureSession: NSObject {
         connection.videoOrientation = .Portrait
     }
     
-    public func start()
-    {
+    public func start() {
         session.startRunning()
     }
     
-    public func stop()
-    {
+    public func stop() {
         session.stopRunning()
     }
     
-    public func switchCameras()
-    {
+    public func switchCameras() {
         let currentCameraInput = session.inputs[0] as! AVCaptureDeviceInput
         var newCamera : AVCaptureDevice?
-        if (currentCameraInput.device.position == .Back)
-        {
+        if (currentCameraInput.device.position == .Back) {
             newCamera = ImageCaptureSession.createCameraInput(position: .Front)
         }
-        else
-        {
+        else {
             newCamera = ImageCaptureSession.createCameraInput(position: .Back)
         }
         
-        if let newCamera = newCamera
-        {
+        if let newCamera = newCamera {
             session.beginConfiguration()
             let newVideoInput = try? AVCaptureDeviceInput(device: newCamera)
             session.removeInput(currentCameraInput)
@@ -90,56 +83,46 @@ public class ImageCaptureSession: NSObject {
         }
     }
     
-    class private func createCameraInput(position position : AVCaptureDevicePosition) -> AVCaptureDevice?
-    {
+    class private func createCameraInput(position position: AVCaptureDevicePosition) -> AVCaptureDevice? {
         let devices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
-        for device in devices
-        {
-            if (device.position == position)
-            {
+        for device in devices {
+            if (device.position == position) {
                 return device
             }
         }
         return nil
     }
     
-    public class func hasFrontCamera() -> Bool
-    {
+    public class func hasFrontCamera() -> Bool {
         let camera = self.createCameraInput(position: .Front)
         return (camera != nil)
     }
     
-    public class func hasBackCamera() -> Bool
-    {
+    public class func hasBackCamera() -> Bool {
         let camera = self.createCameraInput(position: .Back)
         return (camera != nil)
     }
     
-    public func captureImage(completion:((image:UIImage?, error:NSError?) -> Void))
-    {
-        var videoConnection : AVCaptureConnection?
+    public func captureImage(completion:((image:UIImage?, error:NSError?) -> Void)) {
+        var videoConnection: AVCaptureConnection?
         var isFrontCamera = true
-        for connection in stillImageOutput.connections as! [AVCaptureConnection]
-        {
-            for port in connection.inputPorts as! [AVCaptureInputPort]
-            {
-                if (port.mediaType == AVMediaTypeVideo)
-                {
+        for connection in stillImageOutput.connections as! [AVCaptureConnection] {
+            for port in connection.inputPorts as! [AVCaptureInputPort] {
+                if port.mediaType == AVMediaTypeVideo {
                     videoConnection = connection
                     let deviceInput = port.input as! AVCaptureDeviceInput
                     isFrontCamera = (deviceInput.device.position == .Front)
                     break
                 }
             }
-            if ((videoConnection) != nil)
-            {
+            
+            if videoConnection != nil {
                 break
             }
         }
         
         stillImageOutput.captureStillImageAsynchronouslyFromConnection(videoConnection, completionHandler: { (sampleBuffer, error) -> Void in
-            if (error == nil)
-            {
+            if error == nil {
                 let outputRect = self.previewLayer.metadataOutputRectOfInterestForRect(self.previewLayer.bounds)
                 let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
                 var image = UIImage(data: imageData)
@@ -149,8 +132,7 @@ public class ImageCaptureSession: NSObject {
 
                 completion(image: image, error: nil)
             }
-            else
-            {
+            else {
                 completion(image: nil, error: error)
             }
             return
@@ -171,8 +153,9 @@ public class ImageCaptureSession: NSObject {
         //http://stackoverflow.com/questions/15951746/how-to-crop-an-image-from-avcapture-to-a-rect-seen-on-the-display
         let outputRect = cropRect
         let cgImage = image.CGImage
-        let width : CGFloat = CGFloat(CGImageGetWidth(cgImage))
-        let height : CGFloat = CGFloat(CGImageGetHeight(cgImage))
+        let width = CGFloat(CGImageGetWidth(cgImage))
+        let height = CGFloat(CGImageGetHeight(cgImage))
+        
         let cropRect = CGRect(x: outputRect.origin.x * width,
             y: outputRect.origin.y * height,
             width: outputRect.size.width * width,
@@ -192,8 +175,7 @@ public class ImageCaptureSession: NSObject {
         return image
     }
     
-    public class func checkAndRequestCameraPermissions(completion:(granted:Bool) -> Void)
-    {
+    public class func checkAndRequestCameraPermissions(completion: (granted:Bool) -> Void) {
         /* Auth status request can be slow so this code is added so we can check
            a local variable instead of asking the device. It is implemented as a
            struct because at the time of writing there were no static variables
@@ -211,12 +193,10 @@ public class ImageCaptureSession: NSObject {
             dispatch_async(dispatch_get_main_queue()) { completion(granted: false) }
         case .NotDetermined:
             AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo, completionHandler: { (granted) -> Void in
-                if (granted)
-                {
+                if (granted) {
                     Holder.authStatus = .Authorized
                 }
-                else
-                {
+                else {
                     Holder.authStatus = .Denied
                 }
                 dispatch_async(dispatch_get_main_queue()) { completion(granted: granted) }
