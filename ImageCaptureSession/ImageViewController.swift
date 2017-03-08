@@ -19,7 +19,7 @@ class ImageViewController: UIViewController {
     }
     
     @IBAction func dismissViewPressed() {
-        self.dismissViewControllerAnimated(true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
     
 }

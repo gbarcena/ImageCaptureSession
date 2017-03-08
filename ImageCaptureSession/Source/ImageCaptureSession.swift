@@ -8,23 +8,23 @@ import UIKit
 import AVFoundation
 
 // TODO: Fix issue with final image going outside preview bounds
-public class PreviewView : UIView {
+open class PreviewView : UIView {
     var previewLayer : AVCaptureVideoPreviewLayer? {
         didSet {
             oldValue?.removeFromSuperlayer()
             if let previewLayer = previewLayer {
-                self.layer.insertSublayer(previewLayer, atIndex: 0)
+                self.layer.insertSublayer(previewLayer, at: 0)
             }
         }
     }
     
-    override public func layoutSubviews() {
+    override open func layoutSubviews() {
         super.layoutSubviews()
         self.previewLayer?.frame = self.bounds
     }
 }
 
-public class ImageCaptureSession: NSObject {
+open class ImageCaptureSession: NSObject {
     var session = AVCaptureSession()
     var previewLayer: AVCaptureVideoPreviewLayer
     var stillImageOutput: AVCaptureStillImageOutput
@@ -52,26 +52,26 @@ public class ImageCaptureSession: NSObject {
         
         session.commitConfiguration()
         
-        let connection = stillImageOutput.connectionWithMediaType(AVMediaTypeVideo)
-        connection.videoOrientation = .Portrait
+        let connection = stillImageOutput.connection(withMediaType: AVMediaTypeVideo)
+        connection?.videoOrientation = .portrait
     }
     
-    public func start() {
+    open func start() {
         session.startRunning()
     }
     
-    public func stop() {
+    open func stop() {
         session.stopRunning()
     }
     
-    public func switchCameras() {
+    open func switchCameras() {
         let currentCameraInput = session.inputs[0] as! AVCaptureDeviceInput
         var newCamera : AVCaptureDevice?
-        if (currentCameraInput.device.position == .Back) {
-            newCamera = ImageCaptureSession.createCameraInput(position: .Front)
+        if (currentCameraInput.device.position == .back) {
+            newCamera = ImageCaptureSession.createCameraInput(position: .front)
         }
         else {
-            newCamera = ImageCaptureSession.createCameraInput(position: .Back)
+            newCamera = ImageCaptureSession.createCameraInput(position: .back)
         }
         
         if let newCamera = newCamera {
@@ -83,8 +83,8 @@ public class ImageCaptureSession: NSObject {
         }
     }
     
-    class private func createCameraInput(position position: AVCaptureDevicePosition) -> AVCaptureDevice? {
-        let devices = AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo) as! [AVCaptureDevice]
+    class fileprivate func createCameraInput(position: AVCaptureDevicePosition) -> AVCaptureDevice? {
+        let devices = AVCaptureDevice.devices(withMediaType: AVMediaTypeVideo) as! [AVCaptureDevice]
         for device in devices {
             if (device.position == position) {
                 return device
@@ -93,17 +93,17 @@ public class ImageCaptureSession: NSObject {
         return nil
     }
     
-    public class func hasFrontCamera() -> Bool {
-        let camera = self.createCameraInput(position: .Front)
+    open class func hasFrontCamera() -> Bool {
+        let camera = self.createCameraInput(position: .front)
         return (camera != nil)
     }
     
-    public class func hasBackCamera() -> Bool {
-        let camera = self.createCameraInput(position: .Back)
+    open class func hasBackCamera() -> Bool {
+        let camera = self.createCameraInput(position: .back)
         return (camera != nil)
     }
     
-    public func captureImage(completion:((image:UIImage?, error:NSError?) -> Void)) {
+    open func captureImage(_ completion:@escaping ((_ image:UIImage?, _ error:NSError?) -> Void)) {
         var videoConnection: AVCaptureConnection?
         var isFrontCamera = true
         for connection in stillImageOutput.connections as! [AVCaptureConnection] {
@@ -111,7 +111,7 @@ public class ImageCaptureSession: NSObject {
                 if port.mediaType == AVMediaTypeVideo {
                     videoConnection = connection
                     let deviceInput = port.input as! AVCaptureDeviceInput
-                    isFrontCamera = (deviceInput.device.position == .Front)
+                    isFrontCamera = (deviceInput.device.position == .front)
                     break
                 }
             }
@@ -121,52 +121,53 @@ public class ImageCaptureSession: NSObject {
             }
         }
         
-        stillImageOutput.captureStillImageAsynchronouslyFromConnection(videoConnection, completionHandler: { (sampleBuffer, error) -> Void in
+        stillImageOutput.captureStillImageAsynchronously(from: videoConnection, completionHandler: { (sampleBuffer, error) -> Void in
             if error == nil {
-                let outputRect = self.previewLayer.metadataOutputRectOfInterestForRect(self.previewLayer.bounds)
+                let outputRect = self.previewLayer.metadataOutputRectOfInterest(for: self.previewLayer.bounds)
                 let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer)
-                var image = UIImage(data: imageData)
+                var image = UIImage(data: imageData!)
                 if let cleanUpImage = image {
-                    image = self.dynamicType.cleanUpImage(cleanUpImage, mirrorFlipImage: isFrontCamera, cropRect: outputRect)
+                    image = type(of: self).cleanUpImage(cleanUpImage, mirrorFlipImage: isFrontCamera, cropRect: outputRect)
                 }
 
-                completion(image: image, error: nil)
+                completion(image, nil)
             }
             else {
-                completion(image: nil, error: error)
+                completion(nil, error as NSError?)
             }
             return
         })
     }
     
-    private class func cleanUpImage(var image:UIImage, mirrorFlipImage:Bool, cropRect:CGRect) -> UIImage {
+    private class func cleanUpImage(_ image:UIImage, mirrorFlipImage:Bool, cropRect:CGRect) -> UIImage {
+        var image = image
         // When using the front fracing camera, instead of seeing the
         // original image in the final image we see it flipped so this
         // flips it back
         if (mirrorFlipImage) {
             let scale = image.scale
-            image = UIImage(CGImage: image.CGImage!, scale: scale, orientation: .LeftMirrored)
+            image = UIImage(cgImage: image.cgImage!, scale: scale, orientation: .leftMirrored)
         }
         
         // When the image is taken it is the full bounds of the camera.
         // So this code crops out what is seen in the preview layer rect
         //http://stackoverflow.com/questions/15951746/how-to-crop-an-image-from-avcapture-to-a-rect-seen-on-the-display
         let outputRect = cropRect
-        let cgImage = image.CGImage
-        let width = CGFloat(CGImageGetWidth(cgImage))
-        let height = CGFloat(CGImageGetHeight(cgImage))
+        let cgImage = image.cgImage
+        let width = CGFloat((cgImage?.width)!)
+        let height = CGFloat((cgImage?.height)!)
         
         let cropRect = CGRect(x: outputRect.origin.x * width,
             y: outputRect.origin.y * height,
             width: outputRect.size.width * width,
             height: outputRect.size.height * height)
         
-        let croppedCGImage = CGImageCreateWithImageInRect(cgImage, cropRect)
-        image = UIImage(CGImage: croppedCGImage!, scale: 1, orientation: image.imageOrientation)
+        let croppedCGImage = cgImage?.cropping(to: cropRect)
+        image = UIImage(cgImage: croppedCGImage!, scale: 1, orientation: image.imageOrientation)
         
         // Remove all orientation information
         UIGraphicsBeginImageContext(image.size)
-        image.drawAtPoint(CGPointZero)
+        image.draw(at: CGPoint.zero)
         if let graphicsImage = UIGraphicsGetImageFromCurrentImageContext() {
             image = graphicsImage
         }
@@ -175,7 +176,7 @@ public class ImageCaptureSession: NSObject {
         return image
     }
     
-    public class func checkAndRequestCameraPermissions(completion: (granted:Bool) -> Void) {
+    open class func checkAndRequestCameraPermissions(_ completion: @escaping (_ granted:Bool) -> Void) {
         /* Auth status request can be slow so this code is added so we can check
            a local variable instead of asking the device. It is implemented as a
            struct because at the time of writing there were no static variables
@@ -183,23 +184,23 @@ public class ImageCaptureSession: NSObject {
            permission will terminate the app.
         */
         struct Holder {
-            static var authStatus = AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo)
+            static var authStatus = AVCaptureDevice.authorizationStatus(forMediaType: AVMediaTypeVideo)
         }
         
         switch (Holder.authStatus) {
-        case .Authorized, .Restricted:
-            dispatch_async(dispatch_get_main_queue()) { completion(granted: true) }
-        case .Denied:
-            dispatch_async(dispatch_get_main_queue()) { completion(granted: false) }
-        case .NotDetermined:
-            AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo, completionHandler: { (granted) -> Void in
+        case .authorized, .restricted:
+            DispatchQueue.main.async { completion(true) }
+        case .denied:
+            DispatchQueue.main.async { completion(false) }
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(forMediaType: AVMediaTypeVideo, completionHandler: { (granted) -> Void in
                 if (granted) {
-                    Holder.authStatus = .Authorized
+                    Holder.authStatus = .authorized
                 }
                 else {
-                    Holder.authStatus = .Denied
+                    Holder.authStatus = .denied
                 }
-                dispatch_async(dispatch_get_main_queue()) { completion(granted: granted) }
+                DispatchQueue.main.async { completion(granted) }
             })
         }
     }
