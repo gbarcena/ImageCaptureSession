@@ -7,7 +7,6 @@
 import UIKit
 import AVFoundation
 
-// TODO: Fix issue with final image going outside preview bounds
 open class PreviewView : UIView {
     var previewLayer : AVCaptureVideoPreviewLayer? {
         didSet {
